@@ -1,93 +1,131 @@
-# Experiment 6: Stored Procedures, Validation Triggers, and Audit Logging
+# DBMS Laboratory Experiments (MySQL 8.0+)
 
-## Aim
-To create a stored procedure `transfer_employee(emp_id, new_dept_id)` with input validation and custom error handling, and to implement triggers for salary business rule validation and automated audit logging, including testing edge cases.
+A comprehensive, production-grade repository of university Database Management System (DBMS) practical laboratory experiments implemented in **MySQL 8.0+**.
 
----
-
-## Concepts Demonstrated
-
-### 1. Stored Procedures with Control Flow & Signaling
-- Encapsulates multi-statement transactional logic directly on the database engine.
-- Uses `IN` parameters (`p_emp_id`, `p_new_dept_id`).
-- Implements existence validation queries using `SELECT COUNT(*) INTO ...`.
-- Raises custom, user-friendly exceptions using standard ANSI `SIGNAL SQLSTATE '45000'` with descriptive `MESSAGE_TEXT`.
-
-### 2. Triggers in MySQL
-- **`BEFORE UPDATE` Trigger (`before_employee_salary_update`)**:
-  Interprets incoming modifications before they are written to disk. Checks `NEW.Salary < 0` and aborts the transaction via `SIGNAL` if invalid, preserving data integrity.
-- **`AFTER UPDATE` Trigger (`after_employee_salary_update`)**:
-  Fires post-commit on row updates. Checks if `OLD.Salary <> NEW.Salary` and automatically writes an immutable audit entry to `Salary_Audit` with timestamp `CURRENT_TIMESTAMP`.
-
-### 3. Client Command: MySQL `DELIMITER`
-- In standard SQL, `;` indicates the end of a query statement.
-- Because stored routine and trigger bodies contain internal statements also ended with `;`, client interfaces (CLI and Workbench) need a temporary delimiter (such as `$$`) so the entire block from `CREATE PROCEDURE/TRIGGER` to `END $$` is dispatched to the server as one single unit.
+This repository contains fully tested, idempotent SQL scripts, complete schemas, authentic sample datasets, and academic documentation for all experiments ranging from relational constraints to recursive CTEs, stored procedures, and audit triggers.
 
 ---
 
-## Schema & Tables
+## 📚 Table of Experiments
 
-### 1. `Department`
-- `Dept_ID INT PRIMARY KEY`
-- `Dept_Name VARCHAR(100) NOT NULL`
-
-### 2. `Employee`
-- `Emp_ID INT PRIMARY KEY`
-- `Emp_Name VARCHAR(100) NOT NULL`
-- `Salary DECIMAL(10,2) NOT NULL`
-- `Dept_ID INT` (Foreign Key referencing `Department(Dept_ID)`)
-
-### 3. `Salary_Audit`
-- `Audit_ID INT AUTO_INCREMENT PRIMARY KEY`
-- `Emp_ID INT NOT NULL`
-- `Old_Salary DECIMAL(10,2) NOT NULL`
-- `New_Salary DECIMAL(10,2) NOT NULL`
-- `Changed_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+| Experiment | Title | Core Concepts | Script Link |
+|---|---|---|---|
+| **Experiment 02** | College Database & Referential Integrity | Primary Key, Foreign Key, `ON DELETE SET NULL`, `ON DELETE CASCADE`, `UNIQUE`, `NOT NULL` | [experiment_02.sql](EXPERIMENT_02/experiment_02.sql) |
+| **Experiment 03** | Employee-Department-Project Queries | Selection (`WHERE`), Projection, Aggregates (`AVG`, `COUNT`), `GROUP BY`, `HAVING`, `CASE`, `ORDER BY` | [experiment_03.sql](EXPERIMENT_03/experiment_03.sql) |
+| **Experiment 04** | Joins, Subqueries & EXPLAIN Plans | `INNER JOIN`, `LEFT JOIN`, Self-Join, 3-Way Join, Correlated Subqueries, `EXISTS`, Simulated `INTERSECT`/`EXCEPT`, `EXPLAIN` | [experiment_04.sql](EXPERIMENT_04/experiment_04.sql) |
+| **Experiment 05** | Views, Updatability & Recursive CTEs | Aggregate Views, View Updatability Rules, Self-Referential FKs, Common Table Expressions, Recursive CTE | [experiment_05.sql](EXPERIMENT_05/experiment_05.sql) |
+| **Experiment 06** | Stored Procedures & Triggers | Stored Procedures, `SIGNAL SQLSTATE`, `BEFORE UPDATE` Validation Trigger, `AFTER UPDATE` Audit Logging | [experiment_06.sql](EXPERIMENT_06/experiment_06.sql) |
 
 ---
 
-## How to Execute the Script
+## 📁 Repository Structure
 
-### Using MySQL Command-Line Client
+```
+DBMS_LAB_EXPERIMENTS/
+├── .gitignore                          # Standard git ignore definitions
+├── README.md                           # Master laboratory documentation (this file)
+│
+├── EXPERIMENT_02/                      # Experiment 2: College Database & Constraints
+│   ├── experiment_02.sql               # Executable MySQL script
+│   └── README.md                       # Documentation & transcription notes
+│
+├── EXPERIMENT_03/                      # Experiment 3: Selection, Grouping & Aggregations
+│   ├── experiment_03.sql               # Executable MySQL script
+│   └── README.md                       # Documentation & query analysis
+│
+├── EXPERIMENT_04/                      # Experiment 4: Joins, Subqueries & EXPLAIN
+│   ├── experiment_04.sql               # Executable MySQL script
+│   └── README.md                       # Documentation & query optimization notes
+│
+├── EXPERIMENT_05/                      # Experiment 5: Views & Recursive CTEs
+│   ├── experiment_05.sql               # Executable MySQL script
+│   └── README.md                       # Documentation & hierarchy explanation
+│
+├── EXPERIMENT_06/                      # Experiment 6: Stored Procedures & Triggers
+│   ├── experiment_06.sql               # Executable MySQL script
+│   └── README.md                       # Documentation & trigger logic
+│
+└── Ayushman Gupta docx/                # Original source files & handwritten scans
+    ├── DBMS 3 Ayushman Gupta.docx
+    ├── DBMS EXPERIMENT 4 Ayushman Gupta.docx
+    ├── EXPERIMENT DBMS 5 Ayushman Gupta.docx
+    ├── DBMS EXP 6 Ayushman Gupta.docx
+    └── WhatsApp Image 2026-10-09...    # Handwritten notebook pages for Experiment 2
+```
+
+---
+
+## ⚙️ Prerequisites & Environment
+
+- **DBMS Platform**: MySQL Server 8.0 or newer (compatible with 8.0.x and 8.4 LTS).
+- **Client Tools**:
+  - MySQL Command-Line Client (`mysql`)
+  - MySQL Workbench (or compatible clients like DBeaver, DataGrip, VS Code Database Tools)
+- **SQL Standards**: ANSI SQL-92 / ANSI SQL-99 with MySQL extensions (`DELIMITER`, `SIGNAL`, `JSON`, CTEs).
+
+---
+
+## 🚀 Execution Instructions
+
+Each experiment is self-contained and encapsulated within its own database schema (`CollegeDB`, `CompanyDB_Exp03`, `CompanyDB_Exp04`, `CompanyDB_Exp05`, `CompanyDB_Exp06`). Scripts are completely **rerunnable** and clean up existing tables/views/routines prior to execution.
+
+### Method 1: Using MySQL Command-Line Client
+
+Open PowerShell, Bash, or Command Prompt and run the target script:
+
 ```bash
-mysql -u your_username -p < experiment_06.sql
+# Execute Experiment 2
+mysql -u root -p < EXPERIMENT_02/experiment_02.sql
+
+# Execute Experiment 3
+mysql -u root -p < EXPERIMENT_03/experiment_03.sql
+
+# Execute Experiment 4
+mysql -u root -p < EXPERIMENT_04/experiment_04.sql
+
+# Execute Experiment 5
+mysql -u root -p < EXPERIMENT_05/experiment_05.sql
+
+# Execute Experiment 6
+mysql -u root -p < EXPERIMENT_06/experiment_06.sql
 ```
 
-### Using MySQL Workbench
-1. Open MySQL Workbench.
-2. Open `experiment_06.sql`.
-3. Execute the entire script (`Ctrl+Shift+Enter`).
-4. Inspect the Result Grids showing Alex's transfer, the before/after states, and the `Salary_Audit` log.
+### Method 2: Using MySQL Workbench
+
+1. Launch **MySQL Workbench** and establish a connection to your local or remote MySQL Server.
+2. Navigate to **File** > **Open SQL Script...** (or press `Ctrl+O`).
+3. Select any desired experiment script (e.g., `EXPERIMENT_02/experiment_02.sql`).
+4. Click the **Execute** button (the yellow lightning bolt icon) or press `Ctrl+Shift+Enter`.
+5. Examine the result tabs in the bottom pane displaying the generated tables, formatted output projections, and query execution plans.
 
 ---
 
-## Key Scenarios & Expected Outcomes
+## 🧠 Key Technical Highlights
 
-### Scenario 1: Successful Department Transfer
-```sql
-CALL transfer_employee(1, 2);
-```
-- Alex's `Dept_ID` transitions from `1` (Sales) to `2` (Engineering).
+### 1. Referential Integrity Actions (`ON DELETE SET NULL` vs `ON DELETE CASCADE`)
+- In **Experiment 2**, `Student` records link to `Department` via `ON DELETE SET NULL`, ensuring that decommissioning an academic department does not inadvertently delete student records.
+- In contrast, `Enrollment` linkages enforce `ON DELETE CASCADE`, preserving clean relational state when a student graduates or a course is retired.
 
-### Scenario 2: Successful Salary Update & Audit Logging
-```sql
-UPDATE Employee SET Salary = 65000.00 WHERE Emp_ID = 1;
-```
-- `Salary_Audit` records `Old_Salary = 60000.00`, `New_Salary = 65000.00`, with the system timestamp.
+### 2. Group Aggregation & Filtering (`GROUP BY` with `HAVING`)
+- In **Experiment 3**, the logical query execution order distinguishes row filtering (`WHERE`) from aggregate group filtering (`HAVING`). Only department cohorts containing more than 5 members are retained post-aggregation.
 
-### Scenario 3: Edge Case & Error Handling (Commented Tests)
-1. **Invalid Employee**:
-   `CALL transfer_employee(999, 2);`
-   -> `ERROR 1644 (45000): Employee does not exist`
-2. **Invalid Department**:
-   `CALL transfer_employee(1, 999);`
-   -> `ERROR 1644 (45000): Department does not exist`
-3. **Negative Salary Attempt**:
-   `UPDATE Employee SET Salary = -5000.00 WHERE Emp_ID = 1;`
-   -> `ERROR 1644 (45000): Salary cannot be negative`
+### 3. Joins, Subqueries & `EXPLAIN` Query Optimization
+- In **Experiment 4**, nested queries and multiple join strategies are benchmarked.
+- Correlated subqueries execute iteratively for each outer row, as documented by `DEPENDENT SUBQUERY` in `EXPLAIN` execution plans.
+- Simulated set operations (`INTERSECT` and `EXCEPT`) using `IN` and `NOT IN` subqueries provide universal backward compatibility while demonstrating set containment logic.
+
+### 4. SQL Views & Recursive CTE Reporting Hierarchy
+- In **Experiment 5**, aggregate views with `GROUP BY` are shown to be non-updatable per MySQL Error 1288 specification.
+- A recursive Common Table Expression (`WITH RECURSIVE`) traverses managerial reporting chains across levels starting from unmanaged division heads (`Manager_ID IS NULL`).
+
+### 5. Stored Procedures, Error Signaling & Triggers
+- In **Experiment 6**, transactional integrity and domain validation are placed at the database layer.
+- `DELIMITER $$` allows multi-statement compound blocks to compile cleanly.
+- `SIGNAL SQLSTATE '45000'` surfaces clean business rule violation messages.
+- `BEFORE UPDATE` prevents negative salary writes, while `AFTER UPDATE` writes historical audit records with timestamp logs into `Salary_Audit`.
 
 ---
 
-## Transcription & Implementation Notes
-- **Source Material**: Reconstructed from `DBMS EXP 6 Ayushman Gupta.docx`.
-- **Safe Reset**: Safely drops existing stored procedures and triggers (`DROP PROCEDURE IF EXISTS ...`, `DROP TRIGGER IF EXISTS ...`) before recreating schema components to guarantee repeatable execution.
+## 📌 Source Code Integrity Statement
+
+The primary source code for all lab practicals consists of the executable `.sql` scripts located in the respective experiment folders. All aims, schemas, column names, constraints, and sample data have been strictly reproduced from the original laboratory materials and validated for correctness and idempotency.
